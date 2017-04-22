@@ -19,11 +19,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     token = config.get('token')
 
     add_devices_callback([
-        MiroboSwitch(name, host, token)
+        XiaomiSwitch(name, host, token)
     ])
 
 
-class MiroboSwitch(SwitchDevice):
+class XiaomiSwitch(SwitchDevice):
     """Representation of a demo switch."""
 
     def __init__(self, name, host, token):
