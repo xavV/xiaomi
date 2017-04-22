@@ -9,7 +9,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-mirobo']
+REQUIREMENTS = ['xiaomi']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
