@@ -49,7 +49,7 @@ def cli(ctx, ip, token, debug):
 @cli.command()
 def discover():
     """Search for robots in the network."""
-    Xiaomi.Device.discover()
+    xiaomi.Device.discover()
 
 
 @cli.command()
@@ -59,16 +59,16 @@ def status(dev):
     res = dev.status()
     if not res:
         return  # bail out
-
-    if res.error_code:
-        click.echo(click.style("Error: %s !" % res.error,
-                               bold=True, fg='red'))
-    click.echo(click.style("State: %s" % res.state, bold=True))
-    click.echo("Battery: %s %%" % res.battery)
-    click.echo("Fanspeed: %s %%" % res.fanspeed)
-    click.echo("Cleaning since: %s" % res.clean_time)
-    click.echo("Cleaned area: %s m²" % res.clean_area)
-    click.echo("DND enabled: %s" % res.dnd)
+    click.echo(res)
+#    if res.error_code:
+#        click.echo(click.style("Error: %s !" % res.error,
+#                               bold=True, fg='red'))
+#    click.echo(click.style("State: %s" % res.state, bold=True))
+#    click.echo("Battery: %s %%" % res.battery)
+#    click.echo("Fanspeed: %s %%" % res.fanspeed)
+#    click.echo("Cleaning since: %s" % res.clean_time)
+#    click.echo("Cleaned area: %s m²" % res.clean_area)
+#    click.echo("DND enabled: %s" % res.dnd)
     # click.echo("Map present: %s" % res.map)
     # click.echo("in_cleaning: %s" % res.in_cleaning)
 
