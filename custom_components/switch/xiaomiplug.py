@@ -5,14 +5,11 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-#REQUIREMENTS = ['xiaomiplug']
-#REQUIREMENTS = ['https://github.com/xavV/xiaomi/archive/master.zip']
-# pylint: disable=unused-argument
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     import xiaomiplug
-    
-    """Setup the demo switches."""
+
+    """Setup the xiaomi smart wifi socket."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get('token')
@@ -23,20 +20,15 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class XiaomiSwitch(SwitchDevice):
-    """Representation of a demo switch."""
+    """Representation of a xiaomi switch."""
 
     def __init__(self, name, host, token):
-        """Initialize the Demo switch."""
+        """Initialize the switch."""
         self._name = name or DEVICE_DEFAULT_NAME
         self.host = host
         self.token = token
         self._switch = None
         self._state = None
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo switch."""
-        return True
 
     @property
     def name(self):
@@ -52,49 +44,42 @@ class XiaomiSwitch(SwitchDevice):
     def available(self):
         return self._state is not None
 
-#    @property
-#    def device_state_attributes(self):
-#        """Return the state attributes of the device."""
-#        return self._state_attrs
-
     @property
     def is_on(self):
-        """Return true if switch is on."""
-        return self._state == "on" # magic magic
+        """Return true if plug is on."""
+        return self._state
 
     @property
     def switch(self):
         if not self._switch: 
-           from xiaomiplug import Device
+           from xiaomiplug import Plug
            _LOGGER.info("initializing with host %s token %s" % (self.host, self.token))
-           self._switch = Device(self.host, self.token)
+           self._switch = Plug(self.host, self.token)
 
         return self._switch
 
-#    def get_status(self):
- #       self._state = self.switch.status()
-
-
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._switch.start()
-#        self.get_status()
+        self.switch.start()
+        self._state = True
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self._switch.stop()
-#        self.get_status()
+        self.switch.stop()
+        self._state = False
+        self.schedule_update_ha_state()
 
     def update(self):
         try:
             state = self.switch.status()
-            self._state = state
             _LOGGER.info("got status: %s" % state)
-            
-#            self._state_attrs = {'status': state.state, 'error': state.error,
-#                                 'battery': state.battery, 'fan': state.fanspeed,
-#                                 'cleaning time': str(state.clean_time), 'cleaned area': state.clean_area}
-            #self._state = 5#state.state_code
+
+            if state == "on":
+                self._state = True
+            else:
+                self._state = False
+
         except Exception as ex:
             _LOGGER.error("Got exception while fetching the state: %s" % ex)
 

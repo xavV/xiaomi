@@ -1,56 +1,57 @@
-import logging
-import socket
-import datetime
 import codecs
-from xiaomiplug import (Message, Utils, VacuumStatus, ConsumableStatus,
-                    CleaningSummary, CleaningDetails, Timer, AirQuality)
+import datetime
+import socket
+import logging
+from typing import Any, List
+
+from .protocol import Message
 
 _LOGGER = logging.getLogger(__name__)
 
 
+class DeviceException(Exception):
+    pass
+
+
 class Device:
-    """Main class representing the vacuum."""
-    def __init__(self, ip, token, debug=0):
-        print("Init device: " + ip)
+    def __init__(self, ip: str, token: str,
+                 start_id: int=0, debug: int=0) -> None:
         self.ip = ip
         self.port = 54321
         self.token = bytes.fromhex(token)
         self.debug = debug
 
-        # TODO this is a mess, find a nicer way to provide token to construct
-        Utils.token = self.token
-        self._timeout = 10
-        self.__id = 0
+        self._timeout = 5
+        self._device_ts = None  # type: datetime.datetime
+        self.__id = start_id
         self._devtype = None
         self._serial = None
-        self._ts = None
 
-    def __enter__(self):
+    def __enter__(self) -> 'Device':
         """Does a discover to fetch the devtype and serial."""
-        print("Enter device: " + self.ip)
         m = Device.discover(self.ip)
         if m is not None:
             self._devtype = m.header.value.devtype
             self._serial = m.header.value.serial
-            self._ts = m.header.value.ts
+            self._device_ts = m.header.value.ts
+            _LOGGER.debug("Discovered %s %s with ts: %s" % (self._devtype,
+                                                            self._serial,
+                                                            self._device_ts))
         else:
             _LOGGER.error("Unable to discover a device at address %s", self.ip)
+            raise DeviceException("Unable to discover the device %s" % self.ip)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         pass
 
-    @property
-    def _id(self):
-        """Returns running id."""
-        self.__id += 1
-        return self.__id
-
     @staticmethod
-    def discover(addr=None):
+    def discover(addr: str=None) -> Any:
         """Scan for devices in the network."""
         timeout = 5
         is_broadcast = addr is None
-        seen_addrs = []
+        seen_addrs = []  # type: List[str]
         if is_broadcast:
             addr = '<broadcast>'
             is_broadcast = True
@@ -63,13 +64,13 @@ class Device:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         s.settimeout(timeout)
-        for i in range(3):
+        for _i in range(3):
             s.sendto(helobytes, (addr, 54321))
         while True:
             try:
                 data, addr = s.recvfrom(1024)
-                m = Message.parse(data)
-                #_LOGGER.debug("Got a response: %s" % m)
+                m = Message.parse(data)  # type: Message
+                # _LOGGER.debug("Got a response: %s" % m)
                 if not is_broadcast:
                     return m
 
@@ -87,10 +88,10 @@ class Device:
                 _LOGGER.warning("error while reading discover results: %s", ex)
                 break
 
-    def send(self, command, parameters=None):
+    def send(self, command: str, parameters: Any=None) -> Any:
         """Build and send the given command."""
-#        if self._devtype is None or self._serial is None:
-        self.__enter__()  # when called outside of cm, initialize.
+        if self._devtype is None or self._serial is None:
+            self.__enter__()  # when called outside of cm, initialize.
 
         cmd = {
             "id": self._id,
@@ -99,122 +100,56 @@ class Device:
 
         if parameters:
             cmd["params"] = parameters
-        #cmd='{"id":6149,"method":"set_power","params":["off"]}'
 
+        send_ts = self._device_ts + datetime.timedelta(seconds=1)
         header = {'length': 0, 'unknown': 0x00000000,
                   'devtype': self._devtype, 'serial': self._serial,
-                  'ts': self._ts}
+                  'ts': send_ts}
 
         msg = {'data': {'value': cmd},
                'header': {'value': header},
                'checksum': 0}
-        m = Message.build(msg)
-#        _LOGGER.debug("%s:%s >>: %s" % (self.ip, self.port, msg))
+        ctx = {'token': self.token}
+        m = Message.build(msg, ctx)
+        _LOGGER.debug("%s:%s >>: %s" % (self.ip, self.port, cmd))
         if self.debug > 1:
             _LOGGER.debug("send (timeout %s): %s",
-                          self._timeout, Message.parse(m))
+                          self._timeout, Message.parse(m, ctx))
 
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(self._timeout)
 
         try:
             s.sendto(m, (self.ip, self.port))
-        except Exception as ex:
+        except OSError as ex:
             _LOGGER.error("failed to send msg: %s" % ex)
+            raise DeviceException from ex
 
         try:
             data, addr = s.recvfrom(1024)
-            m = Message.parse(data)
+            m = Message.parse(data, ctx)
+            self._device_ts = m.header.value.ts
             if self.debug > 1:
                 _LOGGER.debug("recv: %s" % m)
-            _LOGGER.debug("%s:%s (ts: %s) << %s" % (self.ip, self.port,
-                                                    m.header.value.ts,
-                                                    m.data.value))
+
+            self.__id = m.data.value["id"]
+            _LOGGER.debug("%s:%s (ts: %s, id: %s) << %s" % (self.ip, self.port,
+                                                            m.header.value.ts,
+                                                            m.data.value["id"],
+                                                            m.data.value))
             return m.data.value["result"]
-        except Exception as ex:
-            _LOGGER.error("got error when receiving: %s" % ex)
-            raise
+        except OSError as ex:
+            _LOGGER.error("got error when receiving: %s", ex)
+            raise DeviceException from ex
 
-    def start(self):
-        return self.send("set_power", ["on"])
+    @property
+    def _id(self) -> int:
+        """Returns running id."""
+        self.__id += 1
+        if self.__id >= 9999:
+            self.__id = 0
+        return self.__id
 
-    def stop(self):
-        return self.send("set_power", ["off"])
-
-    def getInfo(self):
-        return AirQuality(self.send("get_prop", ["aqi", "humidity", "temp_dec", "mode"]))
-
-
-    def spot(self):
-        return self.send("app_spot")
-
-    def pause(self):
-        return self.send("app_pause")
-
-    def home(self):
-        self.send("app_stop")
-        return self.send("app_charge")
-
-    def status(self):
-        return self.send("get_prop", ["power"])[0]
-
-    def log_upload_status(self):
-        # {"result": [{"log_upload_status": 7}], "id": 1}
-        return self.send("get_log_upload_status")
-
-    def consumable_status(self):
-        return ConsumableStatus(self.send("get_consumable")[0])
-
-    def map(self):
-        # returns ['retry'] without internet
-        return self.send("get_map_v1")
-
-    def clean_history(self):
-        return CleaningSummary(self.send("get_clean_summary"))
-
-    def clean_details(self, id_):
-        details = self.send("get_clean_record", [id_])
-
-        res = list()
-        for rec in details:
-            res.append(CleaningDetails(rec))
-
-        return res
-
-    def find(self):
-        return self.send("find_me", [""])
-
-    def timer(self):
-        timers = list()
-        for rec in self.send("get_timer", [""]):
-            timers.append(Timer(rec))
-
-        return timers
-
-    def set_timer(self, details):
-        # how to create timers/change values?
-        # ['ts', 'on'] to enable
-        raise NotImplementedError()
-        return self.send("upd_timer", ["ts", "on"])
-
-    def dnd_status(self):
-        # {'result': [{'enabled': 1, 'start_minute': 0, 'end_minute': 0,
-        #  'start_hour': 22, 'end_hour': 8}], 'id': 1}
-        return self.send("get_dnd_timer")
-
-    def set_dnd(self, start_hr, start_min, end_hr, end_min):
-        return self.send("set_dnd_timer",
-                         [start_hr, start_min, end_hr, end_min])
-
-    def disable_dnd(self):
-        return self.send("close_dnd_timer", [""])
-
-    def set_fan_speed(self, speed):
-        # speed = [38, 60 or 77]
-        return self.send("set_custom_mode", [speed])
-
-    def fan_speed(self):
-        return self.send("get_custom_mode")[0]
-
-    def raw_command(self, cmd, params):
-        return self.send(cmd, params)
+    @property
+    def raw_id(self) -> int:
+        return self.__id

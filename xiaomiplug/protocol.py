@@ -3,6 +3,8 @@ import hashlib
 import json
 import logging
 import calendar
+from typing import Any, Dict, Tuple
+from pprint import pprint as pp  # noqa: F401
 
 from construct import (Struct, Bytes, Const, Int16ub, Int32ub, GreedyBytes,
                        Adapter, Checksum, RawCopy, Rebuild, IfThenElse,
@@ -18,34 +20,33 @@ from cryptography.hazmat.primitives import padding
 _LOGGER = logging.getLogger(__name__)
 
 # Map of device ids
-xiaomi_devices = {0x02f2: "Xiaomi Mi Robot Vacuum",
-                  0x02c1: "Xiaomi Smart Mi Air Purifier",
-                  0x031a: "Xiaomi Smart home gateway",
-                  0x0330: "Yeelight color bulb"
-                  }
-xiaomi_devices = {y: x for x, y in xiaomi_devices.items()}
+xiaomi_devices_reverse = {0x02f2: "Xiaomi Mi Robot Vacuum",
+                          0x02c1: "Xiaomi Mi Smart WiFi Socket",
+                          0x00c4: "Xiaomi Smart Mi Air Purifier",
+                          0x031a: "Xiaomi Smart home gateway",
+                          0x0330: "Yeelight color bulb"
+                          }
+xiaomi_devices = {y: x for x, y in xiaomi_devices_reverse.items()}
 
 
 class Utils:
     """ This class is adapted from the original xpn.py code by gst666 """
-    # TODO nicer way to handle tokens
-    token = ""
 
     @staticmethod
-    def md5(data):
+    def md5(data: bytes) -> bytes:
         checksum = hashlib.md5()
         checksum.update(data)
         return checksum.digest()
 
     @staticmethod
-    def key_iv():
-        key = Utils.md5(Utils.token)
-        iv = Utils.md5(key + Utils.token)
+    def key_iv(token: bytes) -> Tuple[bytes, bytes]:
+        key = Utils.md5(token)
+        iv = Utils.md5(key + token)
         return key, iv
 
     @staticmethod
-    def encrypt(plaintext):
-        key, iv = Utils.key_iv()
+    def encrypt(plaintext: bytes, token: bytes) -> bytes:
+        key, iv = Utils.key_iv(token)
         padder = padding.PKCS7(128).padder()
 
         padded_plaintext = padder.update(plaintext) + padder.finalize()
@@ -56,8 +57,8 @@ class Utils:
         return encryptor.update(padded_plaintext) + encryptor.finalize()
 
     @staticmethod
-    def decrypt(ciphertext):
-        key, iv = Utils.key_iv()
+    def decrypt(ciphertext: bytes, token: bytes) -> bytes:
+        key, iv = Utils.key_iv(token)
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
                         backend=default_backend())
 
@@ -70,14 +71,10 @@ class Utils:
         return unpadded_plaintext
 
     @staticmethod
-    def checksum_field_bytes(ctx):
-        """Gatherd bytes for checksum calculation"""
-        # print("CHECKSUM: %s" % ctx["header"])
-        if Utils.token is None:
-            raise Exception("you have to define token")
-        #print("CTX: %s" % ctx)
+    def checksum_field_bytes(ctx: Dict[str, Any]) -> bytearray:
+        """Gather bytes for checksum calculation"""
         x = bytearray(ctx["header"].data)
-        x += Utils.token
+        x += ctx["_"]["token"]
         if "data" in ctx:
             x += ctx["data"].data
             # print("DATA: %s" % ctx["data"])
@@ -85,13 +82,13 @@ class Utils:
         return x
 
     @staticmethod
-    def get_length(x):
+    def get_length(x) -> int:
         """Return total packet length."""
-        datalen = x._.data.length
+        datalen = x._.data.length  # type: int
         return datalen + 32
 
     @staticmethod
-    def is_hello(x):
+    def is_hello(x) -> bool:
         """Return if packet is a hello packet."""
         # not very nice, but we know that hellos are 32b of length
         if 'length' in x:
@@ -99,7 +96,7 @@ class Utils:
         else:
             val = x.header.value['length']
 
-        return val == 32
+        return bool(val == 32)
 
 
 class TimeAdapter(Adapter):
@@ -108,17 +105,21 @@ class TimeAdapter(Adapter):
         return calendar.timegm(obj.timetuple())
 
     def _decode(self, obj, context):
-        return datetime.datetime.fromtimestamp(obj)
+        return datetime.datetime.utcfromtimestamp(obj)
 
 
 class EncryptionAdapter(Adapter):
     """Adapter to handle communication encryption."""
     def _encode(self, obj, context):
-        return Utils.encrypt(json.dumps(obj).encode('utf-8') + b'\x00')
+        # pp(context)
+        return Utils.encrypt(json.dumps(obj).encode('utf-8') + b'\x00',
+                             context['_']['token'])
 
     def _decode(self, obj, context):
         try:
-            decrypted = Utils.decrypt(obj).rstrip(b"\x00")
+            # pp(context)
+            decrypted = Utils.decrypt(obj, context['_']['token'])
+            decrypted = decrypted.rstrip(b"\x00")
         except Exception as ex:
             _LOGGER.debug("Unable to decrypt, returning raw bytes.")
             return obj
@@ -133,7 +134,6 @@ class EncryptionAdapter(Adapter):
         return jsoned
 
 
-
 Message = Struct(
     # for building we need data before anything else.
     "data" / Pointer(32, RawCopy(EncryptionAdapter(GreedyBytes))),
@@ -141,10 +141,10 @@ Message = Struct(
         Const(Int16ub, 0x2131),
         "length" / Rebuild(Int16ub, Utils.get_length),
         "unknown" / Default(Int32ub, 0x00000000),
-        "devtype" / Enum(Default(Int16ub, 0x02C1),
+        "devtype" / Enum(Default(Int16ub, 0x02c1),
                          default=Pass, **xiaomi_devices),
         "serial" / Default(Int16ub, 0xa40d),
-        "ts" / Default(Int32ub, 0x00000000),
+        "ts" / TimeAdapter(Default(Int32ub, datetime.datetime.utcnow()))
     )),
     "checksum" / IfThenElse(
         Utils.is_hello,
