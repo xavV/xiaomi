@@ -5,6 +5,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['construct==2.8.12', 'cryptography==1.9', 'click==6.7']
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     import xiaomiplug
@@ -29,6 +30,11 @@ class XiaomiSwitch(SwitchDevice):
         self.token = token
         self._switch = None
         self._state = None
+
+    @property
+    def should_poll(self):
+        """Poll the plug."""
+        return True
 
     @property
     def name(self):
