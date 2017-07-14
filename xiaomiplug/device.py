@@ -2,7 +2,7 @@ import logging
 import socket
 import datetime
 import codecs
-from xiaomi import (Message, Utils, VacuumStatus, ConsumableStatus,
+from xiaomiplug import (Message, Utils, VacuumStatus, ConsumableStatus,
                     CleaningSummary, CleaningDetails, Timer, AirQuality)
 
 _LOGGER = logging.getLogger(__name__)

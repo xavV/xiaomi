@@ -1,20 +1,16 @@
-"""
-Demo platform that has two fake switches.
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME, CONF_NAME, CONF_HOST
 import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-#REQUIREMENTS = ['xiaomi']
+#REQUIREMENTS = ['xiaomiplug']
 #REQUIREMENTS = ['https://github.com/xavV/xiaomi/archive/master.zip']
 # pylint: disable=unused-argument
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    import xiaomi
+    import xiaomiplug
     
     """Setup the demo switches."""
     host = config.get(CONF_HOST)
@@ -69,7 +65,7 @@ class XiaomiSwitch(SwitchDevice):
     @property
     def switch(self):
         if not self._switch: 
-           from xiaomi import Device
+           from xiaomiplug import Device
            _LOGGER.info("initializing with host %s token %s" % (self.host, self.token))
            self._switch = Device(self.host, self.token)
 

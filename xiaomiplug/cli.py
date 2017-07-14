@@ -10,10 +10,10 @@ if sys.version_info < (3, 4):
           sys.version_info)
     sys.exit(1)
 
-import xiaomi  # noqa: E402
+import xiaomiplug  # noqa: E402
 
 _LOGGER = logging.getLogger(__name__)
-pass_dev = click.make_pass_decorator(xiaomi.Device)
+pass_dev = click.make_pass_decorator(xiaomiplug.Device)
 
 
 @click.group(invoke_without_command=True)
@@ -37,7 +37,7 @@ def cli(ctx, ip, token, debug):
         click.echo("You have to give ip and token!")
         sys.exit(-1)
 
-    dev = xiaomi.Device(ip, token, debug)
+    dev = xiaomiplug.Device(ip, token, debug)
     _LOGGER.debug("Connecting to %s with token %s", ip, token)
 
     ctx.obj = dev
@@ -49,7 +49,7 @@ def cli(ctx, ip, token, debug):
 @cli.command()
 def discover():
     """Search for robots in the network."""
-    xiaomi.Device.discover()
+    xiaomiplug.Device.discover()
 
 
 @cli.command()
