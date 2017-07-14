@@ -7,6 +7,10 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['construct==2.8.12', 'cryptography==1.9', 'click==6.7']
 
+ATTR_POWER = 'power'
+ATTR_TEMPERATURE = 'temperature'
+ATTR_CURRENT = 'current'
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     import xiaomiplug
 
@@ -30,6 +34,8 @@ class XiaomiSwitch(SwitchDevice):
         self.token = token
         self._switch = None
         self._state = None
+        self._temperature = None
+        self._current = None
 
     @property
     def should_poll(self):
@@ -49,6 +55,11 @@ class XiaomiSwitch(SwitchDevice):
     @property
     def available(self):
         return self._state is not None
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        return {ATTR_TEMPERATURE: self._temperature, ATTR_CURRENT: self._current}
 
     @property
     def is_on(self):
@@ -78,13 +89,19 @@ class XiaomiSwitch(SwitchDevice):
 
     def update(self):
         try:
-            state = self.switch.status()
-            _LOGGER.info("got status: %s" % state)
+            data = self.switch.status()
+            _LOGGER.info("got status: %s" % data[ATTR_POWER])
 
-            if state == "on":
+            if data[ATTR_POWER] == "on":
                 self._state = True
             else:
                 self._state = False
+
+            if data[ATTR_TEMPERATURE] is not None:
+                self._temperature = data[ATTR_TEMPERATURE]
+
+            if data[ATTR_CURRENT] is not None:
+                self._current = data[ATTR_CURRENT]
 
         except Exception as ex:
             _LOGGER.error("Got exception while fetching the state: %s" % ex)

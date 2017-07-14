@@ -1,5 +1,8 @@
 from .device import Device, DeviceException
 
+PROPERTY_POWER = 'power'
+PROPERTY_TEMPERATURE = 'temperature'
+PROPERTY_CURRENT = 'current'
 
 class Plug(Device):
     """Main class representing the smart wifi socket / plug."""
@@ -17,7 +20,8 @@ class Plug(Device):
         return self.send("set_power", ["off"])
 
     def status(self):
-        return self.send("get_prop", ["power"])[0]
+        status =  self.send("get_prop", [PROPERTY_POWER, PROPERTY_TEMPERATURE, PROPERTY_CURRENT])
+        return {PROPERTY_POWER: status[0], PROPERTY_TEMPERATURE: status[1], PROPERTY_CURRENT: status[2]}
 
     def raw_command(self, cmd, params):
         """Send a raw command to the robot."""
