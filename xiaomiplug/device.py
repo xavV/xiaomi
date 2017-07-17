@@ -138,9 +138,10 @@ class Device:
                                                             m.data.value["id"],
                                                             m.data.value))
             return m.data.value["result"]
-        except OSError as ex:
+        except Exception as ex:
             _LOGGER.error("got error when receiving: %s", ex)
-            raise DeviceException from ex
+            self.__enter__()
+            raise
 
     @property
     def _id(self) -> int:
