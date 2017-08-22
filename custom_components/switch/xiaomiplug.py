@@ -2,7 +2,7 @@
 Support for Xiaomi Smart WiFi Socket and Smart Power Strip.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/switch.xiaomi_plug/
+https://home-assistant.io/components/switch.xiaomiplug/
 """
 import logging
 
@@ -27,7 +27,7 @@ REQUIREMENTS = ['python-mirobo==0.1.3']
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
 ATTR_CURRENT = 'current'
-
+SUCCESS = ['ok']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -55,7 +55,6 @@ class XiaomiPlugSwitch(SwitchDevice):
             ATTR_TEMPERATURE: None,
             ATTR_CURRENT: None
         }
-
 
     @property
     def should_poll(self):
@@ -92,28 +91,31 @@ class XiaomiPlugSwitch(SwitchDevice):
         """Property accessor for plug object."""
         if not self._plug:
             from mirobo import Plug
-            _LOGGER.info("initializing with host %s token %s",
-                         self.host, self.token)
+            _LOGGER.info("Initializing with host %s", self.host)
             self._plug = Plug(self.host, self.token)
 
         return self._plug
 
     def turn_on(self, **kwargs):
         """Turn the plug on."""
-        self.plug.on()
-        self._state = True
+        if self.plug.on() == SUCCESS:
+            self._state = True
+        else:
+            _LOGGER.error("Turning the plug (%s) on failed.", self.host)
 
     def turn_off(self, **kwargs):
         """Turn the plug off."""
-        self.plug.off()
-        self._state = False
+        if self.plug.off() == SUCCESS:
+            self._state = False
+        else:
+            _LOGGER.error("Turning the plug (%s) off failed.", self.host)
 
     def update(self):
         """Fetch state from the device."""
         from mirobo import DeviceException
         try:
             state = self.plug.status()
-            _LOGGER.debug("got state from the plug: %s", state)
+            _LOGGER.debug("Got state from plug (%s): %s", self.host, state)
 
             self._state_attrs = {
                 ATTR_TEMPERATURE: state.temperature,
@@ -122,4 +124,6 @@ class XiaomiPlugSwitch(SwitchDevice):
 
             self._state = state.is_on
         except DeviceException as ex:
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            _LOGGER.error(
+                "Got exception from plug (%s) while fetching the state: "
+                "%s", self.host, ex)
