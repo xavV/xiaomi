@@ -72,6 +72,7 @@ class XiaomiPlugSwitch(SwitchDevice):
             ATTR_TEMPERATURE: None,
             ATTR_CURRENT: None
         }
+        self._skip_update = False
 
     @property
     def should_poll(self):
@@ -127,6 +128,7 @@ class XiaomiPlugSwitch(SwitchDevice):
 
         if result:
             self._state = True
+            self._skip_update = True
 
         self.hass.async_add_job(self.async_update_ha_state())
 
@@ -137,7 +139,8 @@ class XiaomiPlugSwitch(SwitchDevice):
             "Turning the plug off failed.", self._plug.off)
 
         if result:
-            self._state = True
+            self._state = False
+            self._skip_update = True
 
         self.hass.async_add_job(self.async_update_ha_state())
 
@@ -145,6 +148,12 @@ class XiaomiPlugSwitch(SwitchDevice):
     def async_update(self):
         """Fetch state from the device."""
         from mirobo import DeviceException
+
+        # On changed state the device doesn't provide the new state immediately.
+        if self._skip_update:
+            self._skip_update = False
+            return
+
         try:
             state = yield from self.hass.async_add_job(self._plug.status)
             _LOGGER.debug("Got new state: %s", state)
