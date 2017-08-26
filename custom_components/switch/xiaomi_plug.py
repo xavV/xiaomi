@@ -130,8 +130,6 @@ class XiaomiPlugSwitch(SwitchDevice):
             self._state = True
             self._skip_update = True
 
-        self.hass.async_add_job(self.async_update_ha_state())
-
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the plug off."""
@@ -141,8 +139,6 @@ class XiaomiPlugSwitch(SwitchDevice):
         if result:
             self._state = False
             self._skip_update = True
-
-        self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_update(self):
