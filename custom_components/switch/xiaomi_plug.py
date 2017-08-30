@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-mirobo==0.1.3']
+REQUIREMENTS = ['python-mirobo>=0.1.4']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
@@ -122,7 +122,6 @@ class XiaomiPlugSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the plug on."""
-
         result = yield from self._try_command(
             "Turning the plug on failed.", self._plug.on)
 
@@ -145,7 +144,7 @@ class XiaomiPlugSwitch(SwitchDevice):
         """Fetch state from the device."""
         from mirobo import DeviceException
 
-        # On changed state the device doesn't provide the new state immediately.
+        # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
             self._skip_update = False
             return
