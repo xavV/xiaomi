@@ -1,8 +1,5 @@
 """
 Support for Xiaomi Smart WiFi Socket and Smart Power Strip.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/switch.xiaomi_plug/
 """
 import asyncio
 from functools import partial
@@ -37,7 +34,7 @@ SUCCESS = ['ok']
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the plug from config."""
+    """Set up the switch from config."""
     from mirobo import Plug, DeviceException
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
@@ -51,6 +48,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     try:
         plug = Plug(host, token)
         device_info = plug.info()
+        _LOGGER.info("%s %s %s initialized",
+                     device_info.raw['model'],
+                     device_info.raw['fw_ver'],
+                     device_info.raw['hw_ver'])
 
         xiaomi_plug_switch = XiaomiPlugSwitch(name, plug, device_info)
         hass.data[PLATFORM][host] = xiaomi_plug_switch
