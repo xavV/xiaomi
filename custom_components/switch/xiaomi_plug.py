@@ -60,11 +60,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             plug = PlugV1(host, token)
 
             for channel_usb in [True, False]:
-                name = name + ' USB' if channel_usb else name
-
                 device = ChuangMiPlugV1Switch(
                     name, plug, device_info, channel_usb)
-                key = host + '_channel' + channel_usb
+                key = host + '_channel' + str(int(channel_usb))
                 hass.data[PLATFORM][key] = device
                 devices.append(device)
 
@@ -226,7 +224,9 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
             self._state = state.is_on
             self._state_attrs.update({
                 ATTR_TEMPERATURE: state.temperature,
-                ATTR_LOAD_POWER: state.load_power,
+                # FIXME: The device implementation of the power strip at python-mirobo needs to be fixed.
+                # ATTR_LOAD_POWER: state.load_power,
+                ATTR_LOAD_POWER: state.current
             })
 
         except DeviceException as ex:
@@ -238,6 +238,8 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
 
     def __init__(self, name, plug, device_info, channel_usb):
         """Initialize the plug switch."""
+        name = name + ' USB' if channel_usb else name
+
         XiaomiPlugGenericSwitch.__init__(self, name, plug, device_info)
         self._channel_usb = channel_usb
 
