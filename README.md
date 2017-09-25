@@ -1,10 +1,17 @@
-# xiaomi wifi plug
+# Xiaomi WiFi Plug
 
-Initial integration of Xiaomi wifi plug.
-
-Thanks to [Rytilahti](https://github.com/rytilahti/python-mirobo) for all the work.
+This is a custom component for Home Assistant to integrate the Xiaomi Smart WiFi Socket (called Plug), Xiaomi Smart Power Strip and Xiaomi Chuang Mi Plug V1.
 
 Please follow the instructions on [Retrieving the Access Token](https://home-assistant.io/components/xiaomi/#retrieving-the-access-token) to get the API token to use in the configuration.yaml file.
+
+Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-mirobo) for all the work.
+
+## Features
+* On, Off
+* Current state
+* Attributes
+  - Temperature
+  - Load (PowerStrip only)
 
 # Setup
 
@@ -20,5 +27,3 @@ switch:
     token: 0ed0fdccb2d0cd718108f18a447726a6
 ```
 
-# Features
-* Basic functionality: on, off & current state
