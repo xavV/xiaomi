@@ -55,15 +55,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                      device_info.raw['fw_ver'],
                      device_info.raw['hw_ver'])
 
-        if device_info.raw['model'] == 'chuangmi.plug.v1':
+        if device_info.raw['model'] in ['chuangmi.plug.v1']:
             from mirobo import PlugV1
             plug = PlugV1(host, token)
 
             for channel_usb in [True, False]:
                 device = ChuangMiPlugV1Switch(
                     name, plug, device_info, channel_usb)
-                # FIXME: Doesn't work for multiple switches
-                hass.data[PLATFORM][host] = device
+                key = host + '_channel' + channel_usb
+                hass.data[PLATFORM][key] = device
                 devices.append(device)
 
         elif device_info.raw['model'] in ['qmi.powerstrip.v1',
@@ -193,9 +193,9 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 
 
 class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
-    """Representation of a Xiaomi Plug."""
+    """Representation of a Xiaomi Power Strip."""
 
-    # TODO: Add set_power_mode support
+    # TODO: Add support for set_power_mode: normal/eco
 
     def __init__(self, name, plug, device_info):
         """Initialize the plug switch."""
@@ -267,3 +267,30 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
         if result:
             self._state = False
             self._skip_update = True
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Fetch state from the device."""
+        from mirobo import DeviceException
+
+        # On state change the device doesn't provide the new state immediately.
+        if self._skip_update:
+            self._skip_update = False
+            return
+
+        try:
+            state = yield from self.hass.async_add_job(self._plug.status)
+            _LOGGER.debug("Got new state: %s", state)
+
+            if self._channel_usb:
+                self._state = state.usb_power
+            else:
+                self._state = state.is_on
+
+                # FIXME: Does the device provide a temperature?
+                # self._state_attrs.update({
+                #    ATTR_TEMPERATURE: state.temperature,
+                # })
+
+        except DeviceException as ex:
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
