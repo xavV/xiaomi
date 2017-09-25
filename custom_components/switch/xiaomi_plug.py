@@ -60,6 +60,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             plug = PlugV1(host, token)
 
             for channel_usb in [True, False]:
+                name = name + ' USB' if channel_usb else name
+
                 device = ChuangMiPlugV1Switch(
                     name, plug, device_info, channel_usb)
                 key = host + '_channel' + channel_usb
