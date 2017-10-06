@@ -37,9 +37,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the switch from config."""
     from mirobo import Device, DeviceException
 
-    if PLATFORM not in hass.data:
-        hass.data[PLATFORM] = {}
-
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
@@ -62,8 +59,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             for channel_usb in [True, False]:
                 device = ChuangMiPlugV1Switch(
                     name, plug, device_info, channel_usb)
-                key = host + '_channel' + str(int(channel_usb))
-                hass.data[PLATFORM][key] = device
                 devices.append(device)
 
         elif device_info.raw['model'] in ['qmi.powerstrip.v1',
@@ -71,14 +66,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             from mirobo import Strip
             plug = Strip(host, token)
             device = XiaomiPowerStripSwitch(name, plug, device_info)
-            hass.data[PLATFORM][host] = device
             devices.append(device)
         else:
             # chuangmi.plug.m1, chuangmi.plug.v2
             from mirobo import Plug
             plug = Plug(host, token)
             device = XiaomiPlugGenericSwitch(name, plug, device_info)
-            hass.data[PLATFORM][host] = device
             devices.append(device)
 
     except DeviceException:
