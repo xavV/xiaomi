@@ -4,7 +4,7 @@ This is a custom component for Home Assistant to integrate the Xiaomi Smart WiFi
 
 Please follow the instructions on [Retrieving the Access Token](https://home-assistant.io/components/xiaomi/#retrieving-the-access-token) to get the API token to use in the configuration.yaml file.
 
-Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-mirobo) for all the work.
+Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all the work.
 
 ## Features
 * On, Off
