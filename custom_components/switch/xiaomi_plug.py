@@ -35,7 +35,7 @@ SUCCESS = ['ok']
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the switch from config."""
-    from mirobo import Device, DeviceException
+    from miio import Device, DeviceException
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -53,7 +53,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                      device_info.hardware_version)
 
         if device_info.model in ['chuangmi.plug.v1']:
-            from mirobo import PlugV1
+            from miio import PlugV1
             plug = PlugV1(host, token)
 
             # The device has two switchable channels (mains and a USB port).
@@ -65,13 +65,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         elif device_info.model in ['qmi.powerstrip.v1',
                                    'zimi.powerstrip.v2']:
-            from mirobo import Strip
+            from miio import Strip
             plug = Strip(host, token)
             device = XiaomiPowerStripSwitch(name, plug, device_info)
             devices.append(device)
         elif device_info.model in ['chuangmi.plug.m1',
                                    'chuangmi.plug.v2']:
-            from mirobo import Plug
+            from miio import Plug
             plug = Plug(host, token)
             device = XiaomiPlugGenericSwitch(name, plug, device_info)
             devices.append(device)
@@ -136,7 +136,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a plug command handling error messages."""
-        from mirobo import DeviceException
+        from miio import DeviceException
         try:
             result = yield from self.hass.async_add_job(
                 partial(func, *args, **kwargs))
@@ -171,7 +171,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
-        from mirobo import DeviceException
+        from miio import DeviceException
 
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
@@ -209,7 +209,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
     @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
-        from mirobo import DeviceException
+        from miio import DeviceException
 
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
@@ -272,7 +272,7 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
     @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
-        from mirobo import DeviceException
+        from miio import DeviceException
 
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
