@@ -22,7 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-mirobo>=0.2.0']
+REQUIREMENTS = ['python-miio>=0.3.0']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
@@ -35,10 +35,7 @@ SUCCESS = ['ok']
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the switch from config."""
-    from mirobo import Device, DeviceException
-
-    if PLATFORM not in hass.data:
-        hass.data[PLATFORM] = {}
+    from miio import Device, DeviceException
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -51,36 +48,38 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         plug = Device(host, token)
         device_info = plug.info()
         _LOGGER.info("%s %s %s initialized",
-                     device_info.raw['model'],
-                     device_info.raw['fw_ver'],
-                     device_info.raw['hw_ver'])
+                     device_info.model,
+                     device_info.firmware_version,
+                     device_info.hardware_version)
 
-        if device_info.raw['model'] in ['chuangmi.plug.v1']:
-            from mirobo import PlugV1
+        if device_info.model in ['chuangmi.plug.v1']:
+            from miio import PlugV1
             plug = PlugV1(host, token)
 
+            # The device has two switchable channels (mains and a USB port).
+            # A switch device per channel will be created.
             for channel_usb in [True, False]:
                 device = ChuangMiPlugV1Switch(
                     name, plug, device_info, channel_usb)
-                key = host + '_channel' + str(int(channel_usb))
-                hass.data[PLATFORM][key] = device
                 devices.append(device)
 
-        elif device_info.raw['model'] in ['qmi.powerstrip.v1',
-                                          'zimi.powerstrip.v2']:
-            from mirobo import Strip
+        elif device_info.model in ['qmi.powerstrip.v1',
+                                   'zimi.powerstrip.v2']:
+            from miio import Strip
             plug = Strip(host, token)
             device = XiaomiPowerStripSwitch(name, plug, device_info)
-            hass.data[PLATFORM][host] = device
             devices.append(device)
-        else:
-            # chuangmi.plug.m1, chuangmi.plug.v2
-            from mirobo import Plug
+        elif device_info.model in ['chuangmi.plug.m1',
+                                   'chuangmi.plug.v2']:
+            from miio import Plug
             plug = Plug(host, token)
             device = XiaomiPlugGenericSwitch(name, plug, device_info)
-            hass.data[PLATFORM][host] = device
             devices.append(device)
-
+        else:
+            _LOGGER.error(
+                'Unsupported device found! Please create an issue at '
+                'https://github.com/rytilahti/python-miio/issues '
+                'and provide the following data: %s', device_info.model)
     except DeviceException:
         raise PlatformNotReady
 
@@ -100,7 +99,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
         self._state = None
         self._state_attrs = {
             ATTR_TEMPERATURE: None,
-            ATTR_MODEL: self._device_info.raw['model'],
+            ATTR_MODEL: self._device_info.model,
         }
         self._skip_update = False
 
@@ -137,7 +136,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a plug command handling error messages."""
-        from mirobo import DeviceException
+        from miio import DeviceException
         try:
             result = yield from self.hass.async_add_job(
                 partial(func, *args, **kwargs))
@@ -172,7 +171,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
-        from mirobo import DeviceException
+        from miio import DeviceException
 
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
@@ -204,13 +203,13 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
         self._state_attrs = {
             ATTR_TEMPERATURE: None,
             ATTR_LOAD_POWER: None,
-            ATTR_MODEL: self._device_info.raw['model'],
+            ATTR_MODEL: self._device_info.model,
         }
 
     @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
-        from mirobo import DeviceException
+        from miio import DeviceException
 
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
@@ -224,9 +223,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
             self._state = state.is_on
             self._state_attrs.update({
                 ATTR_TEMPERATURE: state.temperature,
-                # FIXME: The device implementation of the power strip at python-mirobo needs to be fixed.
-                # ATTR_LOAD_POWER: state.load_power,
-                ATTR_LOAD_POWER: state.current
+                ATTR_LOAD_POWER: state.load_power
             })
 
         except DeviceException as ex:
@@ -275,7 +272,7 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
     @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
-        from mirobo import DeviceException
+        from miio import DeviceException
 
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
@@ -290,11 +287,6 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
                 self._state = state.usb_power
             else:
                 self._state = state.is_on
-
-                # FIXME: Does the device provide a temperature?
-                # self._state_attrs.update({
-                #    ATTR_TEMPERATURE: state.temperature,
-                # })
 
         except DeviceException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
