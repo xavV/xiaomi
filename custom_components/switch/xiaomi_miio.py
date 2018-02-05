@@ -1,5 +1,8 @@
 """
 Support for Xiaomi Smart WiFi Socket and Smart Power Strip.
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/switch.xiaomi_miio/
 """
 import asyncio
 from functools import partial
@@ -14,15 +17,15 @@ from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Xiaomi Plug'
-PLATFORM = 'xiaomi_plug'
+DEFAULT_NAME = 'Xiaomi Miio Switch'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio>=0.3.0']
+REQUIREMENTS = ['python-miio>=0.3.5']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
@@ -65,8 +68,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         elif device_info.model in ['qmi.powerstrip.v1',
                                    'zimi.powerstrip.v2']:
-            from miio import Strip
-            plug = Strip(host, token)
+            from miio import PowerStrip
+            plug = PowerStrip(host, token)
             device = XiaomiPowerStripSwitch(name, plug, device_info)
             devices.append(device)
         elif device_info.model in ['chuangmi.plug.m1',
@@ -194,8 +197,6 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
     """Representation of a Xiaomi Power Strip."""
 
-    # TODO: Add support for set_power_mode: normal/eco
-
     def __init__(self, name, plug, device_info):
         """Initialize the plug switch."""
         XiaomiPlugGenericSwitch.__init__(self, name, plug, device_info)
@@ -243,7 +244,6 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn a channel on."""
-
         if self._channel_usb:
             result = yield from self._try_command(
                 "Turning the plug on failed.", self._plug.usb_on)
@@ -287,6 +287,10 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
                 self._state = state.usb_power
             else:
                 self._state = state.is_on
+
+            self._state_attrs.update({
+                ATTR_TEMPERATURE: state.temperature
+            })
 
         except DeviceException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
