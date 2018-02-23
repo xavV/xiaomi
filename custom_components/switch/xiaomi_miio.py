@@ -216,11 +216,9 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
         """Initialize the plug switch."""
         XiaomiPlugGenericSwitch.__init__(self, name, plug, model)
 
-        self._state_attrs = {
-            ATTR_TEMPERATURE: None,
+        self._state_attrs.update({
             ATTR_LOAD_POWER: None,
-            ATTR_MODEL: self._model,
-        }
+        })
 
     @asyncio.coroutine
     def async_update(self):
