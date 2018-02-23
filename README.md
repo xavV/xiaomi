@@ -8,7 +8,7 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 
 ## Features
 * On, Off
-* USB on, off (Chuangmi Plug V1)
+* USB on, off (Chuangmi Plug V1 only)
 * Current state
 * Attributes
   - Temperature
@@ -35,3 +35,14 @@ Configuration variables:
 - **token** (*Required*): The API token of your light.
 - **name** (*Optional*): The name of your light.
 - **model** (*Optional*): The model of your device. Valid values are `chuangmi.plug.v1`, `qmi.powerstrip.v1`, `zimi.powerstrip.v2`, `chuangmi.plug.m1` and `chuangmi.plug.v2`. This setting can be used to bypass the device model detection and is recommended if your device isn't always available.
+
+## Platform services
+
+#### Service switch/xiaomi_miio_set_power_mode (Power Strip only)
+
+Set the extra features.
+
+| Service data attribute    | Optional | Description                                             |
+|---------------------------|----------|---------------------------------------------------------|
+| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
+| `mode`                    |       no | Power mode, valid values are 'normal' and 'green'       |
