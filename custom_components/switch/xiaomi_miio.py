@@ -11,13 +11,16 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA, )
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN, )
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA,
+                                             DOMAIN, )
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
+                                 ATTR_ENTITY_ID)
 from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Miio Switch'
+PLATFORM = 'xiaomi_miio'
 
 CONF_MODEL = 'model'
 
@@ -40,14 +43,25 @@ ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
 ATTR_LOAD_POWER = 'load_power'
 ATTR_MODEL = 'model'
+ATTR_MODE = 'mode'
 SUCCESS = ['ok']
 
+SUPPORT_SET_POWER_MODE = 1
+
+SERVICE_SET_POWER_MODE = 'xiaomi_miio_set_power_mode'
+
+SERVICE_SCHEMA_POWER_MODE = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_MODE): vol.All(vol.In(['green', 'normal'])),
+})
 
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the switch from config."""
     from miio import Device, DeviceException
+    if PLATFORM not in hass.data:
+        hass.data[PLATFORM] = {}
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -80,6 +94,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             device = ChuangMiPlugV1Switch(
                 name, plug, model, channel_usb)
             devices.append(device)
+            hass.data[PLATFORM][host] = device
 
     elif model in ['qmi.powerstrip.v1',
                    'zimi.powerstrip.v2']:
@@ -87,12 +102,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         plug = PowerStrip(host, token)
         device = XiaomiPowerStripSwitch(name, plug, model)
         devices.append(device)
+        hass.data[PLATFORM][host] = device
     elif model in ['chuangmi.plug.m1',
                    'chuangmi.plug.v2']:
         from miio import Plug
         plug = Plug(host, token)
         device = XiaomiPlugGenericSwitch(name, plug, model)
         devices.append(device)
+        hass.data[PLATFORM][host] = device
     else:
         _LOGGER.error(
             'Unsupported device found! Please create an issue at '
@@ -101,6 +118,30 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     async_add_devices(devices, update_before_add=True)
+
+    @asyncio.coroutine
+    def async_service_handler(service):
+        """Map services to methods on XiaomiAirPurifier."""
+        params = {key: value for key, value in service.data.items()
+                  if key != ATTR_ENTITY_ID}
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        if entity_ids:
+            devices = [device for device in hass.data[PLATFORM].values() if
+                       device.entity_id in entity_ids]
+        else:
+            devices = hass.data[PLATFORM].values()
+
+        update_tasks = []
+        for device in devices:
+            yield from getattr(device, 'async_set_power_mode')(**params)
+            update_tasks.append(device.async_update_ha_state(True))
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_POWER_MODE, async_service_handler,
+        schema=SERVICE_SCHEMA_POWER_MODE)
 
 
 class XiaomiPlugGenericSwitch(SwitchDevice):
@@ -119,6 +160,11 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             ATTR_MODEL: self._model,
         }
         self._skip_update = False
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return 0
 
     @property
     def should_poll(self):
@@ -208,6 +254,11 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
+    @asyncio.coroutine
+    def async_set_power_mode(self, mode: str):
+        """Set the power mode."""
+        return
+
 
 class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
     """Representation of a Xiaomi Power Strip."""
@@ -216,11 +267,14 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
         """Initialize the plug switch."""
         XiaomiPlugGenericSwitch.__init__(self, name, plug, model)
 
-        self._state_attrs = {
-            ATTR_TEMPERATURE: None,
+        self._state_attrs.update({
             ATTR_LOAD_POWER: None,
-            ATTR_MODEL: self._model,
-        }
+        })
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_SET_POWER_MODE
 
     @asyncio.coroutine
     def async_update(self):
@@ -245,6 +299,18 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
         except DeviceException as ex:
             self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+    @asyncio.coroutine
+    def async_set_power_mode(self, mode: str):
+        """Set the power mode."""
+        if self.supported_features & SUPPORT_SET_POWER_MODE == 0:
+            return
+
+        from miio.powerstrip import PowerMode
+
+        yield from self._try_command(
+            "Setting the power mode of the power strip failed.",
+            self._plug.set_power_mode, PowerMode(mode))
 
 
 class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
