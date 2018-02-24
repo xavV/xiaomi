@@ -121,7 +121,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     @asyncio.coroutine
     def async_service_handler(service):
-        """Map services to methods on XiaomiAirPurifier."""
+        """Map services to methods on XiaomiPlugGenericSwitch."""
         params = {key: value for key, value in service.data.items()
                   if key != ATTR_ENTITY_ID}
         entity_ids = service.data.get(ATTR_ENTITY_ID)
