@@ -42,7 +42,7 @@ Configuration variables:
 
 Set the extra features.
 
-| Service data attribute    | Optional | Description                                             |
-|---------------------------|----------|---------------------------------------------------------|
-| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
-| `mode`                    |       no | Power mode, valid values are 'normal' and 'green'       |
+| Service data attribute    | Optional | Description                                                          |
+|---------------------------|----------|----------------------------------------------------------------------|
+| `entity_id`               |      yes | Only act on a specific xiaomi miio switch entity. Else targets all.  |
+| `mode`                    |       no | Power mode, valid values are 'normal' and 'green'                    |
