@@ -40,9 +40,9 @@ Configuration variables:
 
 #### Service switch/xiaomi_miio_set_power_mode (Power Strip only)
 
-Set the extra features.
+Set the power mode.
 
-| Service data attribute    | Optional | Description                                                          |
-|---------------------------|----------|----------------------------------------------------------------------|
-| `entity_id`               |      yes | Only act on a specific xiaomi miio switch entity. Else targets all.  |
-| `mode`                    |       no | Power mode, valid values are 'normal' and 'green'                    |
+| Service data attribute    | Optional | Description                                                   |
+|---------------------------|----------|---------------------------------------------------------------|
+| `entity_id`               |      yes | Only act on a specific xiaomi miio entity. Else targets all.  |
+| `mode`                    |       no | Power mode, valid values are 'normal' and 'green'             |
