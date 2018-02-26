@@ -48,6 +48,7 @@ ATTR_MODE = 'mode'
 ATTR_POWER_MODE = 'power_mode'
 ATTR_WIFI_LED = 'wifi_led'
 ATTR_POWER_PRICE = 'power_price'
+ATTR_PRICE = 'price'
 
 SUCCESS = ['ok']
 
@@ -69,8 +70,7 @@ SERVICE_SCHEMA_POWER_MODE = SERVICE_SCHEMA.extend({
 })
 
 SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_POWER_PRICE): vol.All(vol.Coerce(float),
-                                            vol.Range(min=0))
+    vol.Required(ATTR_PRICE): vol.All(vol.Coerce(float), vol.Range(min=0))
 })
 
 SERVICE_TO_METHOD = {
