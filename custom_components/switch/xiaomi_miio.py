@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 })
 
-REQUIREMENTS = ['python-miio>=0.3.5']
+REQUIREMENTS = ['python-miio>=0.3.8']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
@@ -377,7 +377,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
 
         yield from self._try_command(
             "Turning the wifi led on failed.",
-            self._plug.wifi_led_on)
+            self._plug.set_wifi_led, True)
 
     @asyncio.coroutine
     def async_set_wifi_led_off(self):
@@ -387,7 +387,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
 
         yield from self._try_command(
             "Turning the wifi led off failed.",
-            self._plug.wifi_led_off)
+            self._plug.set_wifi_led, False)
 
     @asyncio.coroutine
     def async_set_power_price(self, price: float):
