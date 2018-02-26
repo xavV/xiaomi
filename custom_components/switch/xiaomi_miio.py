@@ -55,8 +55,9 @@ SUPPORT_SET_POWER_MODE = 1
 SUPPORT_SET_WIFI_LED = 2
 SUPPORT_SET_POWER_PRICE = 4
 
+SERVICE_SET_WIFI_LED_ON = 'xiaomi_miio_set_wifi_led_on'
+SERVICE_SET_WIFI_LED_OFF = 'xiaomi_miio_set_wifi_led_off'
 SERVICE_SET_POWER_MODE = 'xiaomi_miio_set_power_mode'
-SERVICE_SET_WIFI_LED = 'xiaomi_miio_set_wifi_ed'
 SERVICE_SET_POWER_PRICE = 'xiaomi_miio_set_power_price'
 
 SERVICE_SCHEMA = vol.Schema({
