@@ -9,10 +9,17 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 ## Features
 * On, Off
 * USB on, off (Chuangmi Plug V1 only)
+* Wifi LED on, off
+* Power Price (0...999)
+* Power Mode (green, normal) (Power Strip V1 only)
 * Current state
 * Attributes
   - Temperature
-  - Load (Power Strip only)
+  - Current (Power Strip only)
+  - Load power (Power Strip only)
+  - Wifi LED (Power Strip only)
+  - Power Price (Power Strip only)
+  - Mode (Power Strip V1 only)
 
 # Setup
 
@@ -38,9 +45,34 @@ Configuration variables:
 
 ## Platform services
 
-#### Service switch/xiaomi_miio_set_power_mode (Power Strip only)
+#### Service switch.xiaomi_miio_set_wifi_led_on (Power Strip only)
 
-Set the extra features.
+Turn the wifi led on.
+
+| Service data attribute    | Optional | Description                                             |
+|---------------------------|----------|---------------------------------------------------------|
+| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
+
+#### Service switch.xiaomi_miio_set_wifi_led_off (Power Strip only)
+
+Turn the wifi led off.
+
+| Service data attribute    | Optional | Description                                             |
+|---------------------------|----------|---------------------------------------------------------|
+| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
+
+#### Service switch.xiaomi_miio_set_power_price (Power Strip only)
+
+Set the power price.
+
+| Service data attribute    | Optional | Description                                             |
+|---------------------------|----------|---------------------------------------------------------|
+| `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
+| `price`                   |       no | Power price, between 0 and 999.                         |
+
+#### Service switch.xiaomi_miio_set_power_mode (Power Strip V1 only)
+
+Set the power mode.
 
 | Service data attribute    | Optional | Description                                             |
 |---------------------------|----------|---------------------------------------------------------|
