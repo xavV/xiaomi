@@ -20,7 +20,7 @@ from homeassistant.exceptions import PlatformNotReady
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Miio Switch'
-PLATFORM = 'xiaomi_miio'
+DATA_KEY = 'switch.xiaomi_miio'
 
 CONF_MODEL = 'model'
 MODEL_POWER_STRIP_V2 = 'zimi.powerstrip.v2'
@@ -101,8 +101,8 @@ SERVICE_TO_METHOD = {
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the switch from config."""
     from miio import Device, DeviceException
-    if PLATFORM not in hass.data:
-        hass.data[PLATFORM] = {}
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -135,7 +135,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             device = ChuangMiPlugV1Switch(
                 name, plug, model, channel_usb)
             devices.append(device)
-            hass.data[PLATFORM][host] = device
+            hass.data[DATA_KEY][host] = device
 
     elif model in ['qmi.powerstrip.v1',
                    'zimi.powerstrip.v2']:
@@ -143,14 +143,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         plug = PowerStrip(host, token)
         device = XiaomiPowerStripSwitch(name, plug, model)
         devices.append(device)
-        hass.data[PLATFORM][host] = device
+        hass.data[DATA_KEY][host] = device
     elif model in ['chuangmi.plug.m1',
                    'chuangmi.plug.v2']:
         from miio import Plug
         plug = Plug(host, token)
         device = XiaomiPlugGenericSwitch(name, plug, model)
         devices.append(device)
-        hass.data[PLATFORM][host] = device
+        hass.data[DATA_KEY][host] = device
     else:
         _LOGGER.error(
             'Unsupported device found! Please create an issue at '
@@ -168,10 +168,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                   if key != ATTR_ENTITY_ID}
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         if entity_ids:
-            devices = [device for device in hass.data[PLATFORM].values() if
+            devices = [device for device in hass.data[DATA_KEY].values() if
                        device.entity_id in entity_ids]
         else:
-            devices = hass.data[PLATFORM].values()
+            devices = hass.data[DATA_KEY].values()
 
         update_tasks = []
         for device in devices:
