@@ -24,7 +24,7 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 ### Xiaomi Smart Power Strip
 
 * Power (on, off)
-* Wifi LED on, off
+* Wifi LED (on, off)
 * Power Price (0...999)
 * Power Mode (green, normal) (Power Strip V1 only)
 * Attributes
