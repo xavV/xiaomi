@@ -1,4 +1,4 @@
-# Xiaomi WiFi Plug
+# Xiaomi Smart WiFi Sockets and Power Strips
 
 This is a custom component for Home Assistant to integrate the Xiaomi Smart WiFi Socket (called Plug), Xiaomi Smart Power Strip and Xiaomi Chuangmi Plug V1.
 
@@ -7,18 +7,31 @@ Please follow the instructions on [Retrieving the Access Token](https://home-ass
 Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all the work.
 
 ## Features
-* On, Off
-* USB on, off (Chuangmi Plug V1 only)
+
+### Xiaomi Smart WiFi Socket
+
+* Power (on, off)
+* Attributes
+  - Temperature
+
+### Xiaomi Chuangmi Plug V1
+
+* Power (on, off)
+* USB (on, off)
+* Attributes
+  - Temperature
+
+### Xiaomi Smart Power Strip
+
+* Power (on, off)
 * Wifi LED on, off
 * Power Price (0...999)
 * Power Mode (green, normal) (Power Strip V1 only)
-* Current state
 * Attributes
   - Temperature
-  - Current (Power Strip only)
-  - Load power (Power Strip only)
-  - Wifi LED (Power Strip only)
-  - Power Price (Power Strip only)
+  - Current
+  - Load power
+  - Wifi LED
   - Mode (Power Strip V1 only)
 
 # Setup
@@ -45,7 +58,7 @@ Configuration variables:
 
 ## Platform services
 
-#### Service switch.xiaomi_miio_set_wifi_led_on (Power Strip only)
+#### Service `switch.xiaomi_miio_set_wifi_led_on` (Power Strip only)
 
 Turn the wifi led on.
 
@@ -53,7 +66,7 @@ Turn the wifi led on.
 |---------------------------|----------|---------------------------------------------------------|
 | `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
 
-#### Service switch.xiaomi_miio_set_wifi_led_off (Power Strip only)
+#### Service `switch.xiaomi_miio_set_wifi_led_off` (Power Strip only)
 
 Turn the wifi led off.
 
@@ -61,7 +74,7 @@ Turn the wifi led off.
 |---------------------------|----------|---------------------------------------------------------|
 | `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
 
-#### Service switch.xiaomi_miio_set_power_price (Power Strip only)
+#### Service `switch.xiaomi_miio_set_power_price` (Power Strip only)
 
 Set the power price.
 
@@ -70,7 +83,7 @@ Set the power price.
 | `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
 | `price`                   |       no | Power price, between 0 and 999.                         |
 
-#### Service switch.xiaomi_miio_set_power_mode (Power Strip V1 only)
+#### Service `switch.xiaomi_miio_set_power_mode` (Power Strip V1 only)
 
 Set the power mode.
 
