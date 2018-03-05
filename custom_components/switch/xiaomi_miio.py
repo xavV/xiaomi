@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA,
                                              DOMAIN, )
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
-                                 ATTR_ENTITY_ID)
+                                 ATTR_ENTITY_ID, )
 from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,12 +34,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'qmi.powerstrip.v1',
          'zimi.powerstrip.v2',
          'chuangmi.plug.m1',
-         'chuangmi.plug.v2',
-         ]),
+         'chuangmi.plug.v2']),
 
 })
 
-REQUIREMENTS = ['python-miio>=0.3.8']
+REQUIREMENTS = ['python-miio==0.3.8']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
@@ -65,7 +64,6 @@ SUPPORT_FLAGS_POWER_STRIP_V1 = (SUPPORT_SET_POWER_MODE |
 
 SUPPORT_FLAGS_POWER_STRIP_V2 = (SUPPORT_SET_WIFI_LED |
                                 SUPPORT_SET_POWER_PRICE)
-
 
 SERVICE_SET_WIFI_LED_ON = 'xiaomi_miio_set_wifi_led_on'
 SERVICE_SET_WIFI_LED_OFF = 'xiaomi_miio_set_wifi_led_off'
@@ -97,8 +95,8 @@ SERVICE_TO_METHOD = {
 
 
 # pylint: disable=unused-argument
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the switch from config."""
     from miio import Device, DeviceException
     if DATA_KEY not in hass.data:
@@ -160,8 +158,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices(devices, update_before_add=True)
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Map services to methods on XiaomiPlugGenericSwitch."""
         method = SERVICE_TO_METHOD.get(service.service)
         params = {key: value for key, value in service.data.items()
@@ -175,11 +172,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         update_tasks = []
         for device in devices:
-            yield from getattr(device, method['method'])(**params)
+            await getattr(device, method['method'])(**params)
             update_tasks.append(device.async_update_ha_state(True))
 
         if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks, loop=hass.loop)
 
     for plug_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[plug_service].get('schema', SERVICE_SCHEMA)
@@ -202,12 +199,13 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             ATTR_TEMPERATURE: None,
             ATTR_MODEL: self._model,
         }
+        self._supported_features = SUPPORT_FLAGS_GENERIC
         self._skip_update = False
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_FLAGS_GENERIC
+        return self._supported_features
 
     @property
     def should_poll(self):
@@ -239,12 +237,11 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
         """Return true if switch is on."""
         return self._state
 
-    @asyncio.coroutine
-    def _try_command(self, mask_error, func, *args, **kwargs):
+    async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a plug command handling error messages."""
         from miio import DeviceException
         try:
-            result = yield from self.hass.async_add_job(
+            result = await self.hass.async_add_job(
                 partial(func, *args, **kwargs))
 
             _LOGGER.debug("Response received from plug: %s", result)
@@ -254,28 +251,25 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             _LOGGER.error(mask_error, exc)
             return False
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the plug on."""
-        result = yield from self._try_command(
+        result = await self._try_command(
             "Turning the plug on failed.", self._plug.on)
 
         if result:
             self._state = True
             self._skip_update = True
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the plug off."""
-        result = yield from self._try_command(
+        result = await self._try_command(
             "Turning the plug off failed.", self._plug.off)
 
         if result:
             self._state = False
             self._skip_update = True
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
 
@@ -285,7 +279,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             return
 
         try:
-            state = yield from self.hass.async_add_job(self._plug.status)
+            state = await self.hass.async_add_job(self._plug.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
@@ -297,23 +291,23 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
-    @asyncio.coroutine
-    def async_set_power_mode(self, mode: str):
+    # pylint: disable=no-self-use
+    async def async_set_power_mode(self, mode: str):
         """Set the power mode."""
         return
 
-    @asyncio.coroutine
-    def async_set_wifi_led_on(self):
+    # pylint: disable=no-self-use
+    async def async_set_wifi_led_on(self):
         """Turn the wifi led on."""
         return
 
-    @asyncio.coroutine
-    def async_set_wifi_led_off(self):
+    # pylint: disable=no-self-use
+    async def async_set_wifi_led_off(self):
         """Turn the wifi led on."""
         return
 
-    @asyncio.coroutine
-    def async_set_power_price(self, price: int):
+    # pylint: disable=no-self-use
+    async def async_set_power_price(self, price: int):
         """Set the power price."""
         return
 
@@ -324,6 +318,11 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
     def __init__(self, name, plug, model):
         """Initialize the plug switch."""
         XiaomiPlugGenericSwitch.__init__(self, name, plug, model)
+
+        if self._model == MODEL_POWER_STRIP_V2:
+            self._supported_features = SUPPORT_FLAGS_POWER_STRIP_V2
+        else:
+            self._supported_features = SUPPORT_FLAGS_POWER_STRIP_V1
 
         self._state_attrs.update({
             ATTR_LOAD_POWER: None,
@@ -341,13 +340,9 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._model == MODEL_POWER_STRIP_V2:
-            return SUPPORT_FLAGS_POWER_STRIP_V2
-        else:
-            return SUPPORT_FLAGS_POWER_STRIP_V1
+        return self._supported_features
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
 
@@ -357,7 +352,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
             return
 
         try:
-            state = yield from self.hass.async_add_job(self._plug.status)
+            state = await self.hass.async_add_job(self._plug.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
@@ -366,58 +361,57 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
                 ATTR_LOAD_POWER: state.load_power,
             })
 
-            if self.supported_features & SUPPORT_SET_POWER_MODE == 1 and state.mode:
+            if self.supported_features & SUPPORT_SET_POWER_MODE == 1 \
+                    and state.mode:
                 self._state_attrs[ATTR_POWER_MODE] = state.mode.value
 
-            if self.supported_features & SUPPORT_SET_WIFI_LED == 1 and state.wifi_led:
+            if self.supported_features & SUPPORT_SET_WIFI_LED == 1 and \
+                    state.wifi_led:
                 self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
 
-            if self.supported_features & SUPPORT_SET_POWER_PRICE == 1 and state.power_price:
+            if self.supported_features & SUPPORT_SET_POWER_PRICE == 1 and \
+                    state.power_price:
                 self._state_attrs[ATTR_POWER_PRICE] = state.power_price
 
         except DeviceException as ex:
             self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
-    @asyncio.coroutine
-    def async_set_power_mode(self, mode: str):
+    async def async_set_power_mode(self, mode: str):
         """Set the power mode."""
         if self.supported_features & SUPPORT_SET_POWER_MODE == 0:
             return
 
         from miio.powerstrip import PowerMode
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting the power mode of the power strip failed.",
             self._plug.set_power_mode, PowerMode(mode))
 
-    @asyncio.coroutine
-    def async_set_wifi_led_on(self):
+    async def async_set_wifi_led_on(self):
         """Turn the wifi led on."""
         if self.supported_features & SUPPORT_SET_WIFI_LED == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the wifi led on failed.",
             self._plug.set_wifi_led, True)
 
-    @asyncio.coroutine
-    def async_set_wifi_led_off(self):
+    async def async_set_wifi_led_off(self):
         """Turn the wifi led on."""
         if self.supported_features & SUPPORT_SET_WIFI_LED == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the wifi led off failed.",
             self._plug.set_wifi_led, False)
 
-    @asyncio.coroutine
-    def async_set_power_price(self, price: int):
+    async def async_set_power_price(self, price: int):
         """Set the power price."""
         if self.supported_features & SUPPORT_SET_POWER_PRICE == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting the power price of the power strip failed.",
             self._plug.set_power_price, price)
 
@@ -432,36 +426,33 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
         XiaomiPlugGenericSwitch.__init__(self, name, plug, model)
         self._channel_usb = channel_usb
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn a channel on."""
         if self._channel_usb:
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Turning the plug on failed.", self._plug.usb_on)
         else:
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Turning the plug on failed.", self._plug.on)
 
         if result:
             self._state = True
             self._skip_update = True
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn a channel off."""
         if self._channel_usb:
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Turning the plug on failed.", self._plug.usb_off)
         else:
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Turning the plug on failed.", self._plug.off)
 
         if result:
             self._state = False
             self._skip_update = True
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
 
@@ -471,7 +462,7 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
             return
 
         try:
-            state = yield from self.hass.async_add_job(self._plug.status)
+            state = await self.hass.async_add_job(self._plug.status)
             _LOGGER.debug("Got new state: %s", state)
 
             if self._channel_usb:
