@@ -56,14 +56,14 @@ SUPPORT_SET_POWER_MODE = 1
 SUPPORT_SET_WIFI_LED = 2
 SUPPORT_SET_POWER_PRICE = 4
 
-SUPPORT_FLAGS_GENERIC = 0
+ADDITIONAL_SUPPORT_FLAGS_GENERIC = 0
 
-SUPPORT_FLAGS_POWER_STRIP_V1 = (SUPPORT_SET_POWER_MODE |
-                                SUPPORT_SET_WIFI_LED |
-                                SUPPORT_SET_POWER_PRICE)
+ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V1 = (SUPPORT_SET_POWER_MODE |
+                                           SUPPORT_SET_WIFI_LED |
+                                           SUPPORT_SET_POWER_PRICE)
 
-SUPPORT_FLAGS_POWER_STRIP_V2 = (SUPPORT_SET_WIFI_LED |
-                                SUPPORT_SET_POWER_PRICE)
+ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V2 = (SUPPORT_SET_WIFI_LED |
+                                           SUPPORT_SET_POWER_PRICE)
 
 SERVICE_SET_WIFI_LED_ON = 'xiaomi_miio_set_wifi_led_on'
 SERVICE_SET_WIFI_LED_OFF = 'xiaomi_miio_set_wifi_led_off'
@@ -199,13 +199,8 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             ATTR_TEMPERATURE: None,
             ATTR_MODEL: self._model,
         }
-        self._supported_features = SUPPORT_FLAGS_GENERIC
+        self._additional_supported_features = ADDITIONAL_SUPPORT_FLAGS_GENERIC
         self._skip_update = False
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
 
     @property
     def should_poll(self):
@@ -291,24 +286,36 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
+    async def async_set_wifi_led_on(self):
+        """Turn the wifi led on."""
+        if self._additional_supported_features & SUPPORT_SET_WIFI_LED == 0:
+            return
+
+        await self._try_command(
+            "Turning the wifi led on failed.",
+            self._plug.set_wifi_led, True)
+
+    async def async_set_wifi_led_off(self):
+        """Turn the wifi led on."""
+        if self._additional_supported_features & SUPPORT_SET_WIFI_LED == 0:
+            return
+
+        await self._try_command(
+            "Turning the wifi led off failed.",
+            self._plug.set_wifi_led, False)
+
+    async def async_set_power_price(self, price: int):
+        """Set the power price."""
+        if self._additional_supported_features & SUPPORT_SET_POWER_PRICE == 0:
+            return
+
+        await self._try_command(
+            "Setting the power price of the power strip failed.",
+            self._plug.set_power_price, price)
+
     # pylint: disable=no-self-use
     async def async_set_power_mode(self, mode: str):
         """Set the power mode."""
-        return
-
-    # pylint: disable=no-self-use
-    async def async_set_wifi_led_on(self):
-        """Turn the wifi led on."""
-        return
-
-    # pylint: disable=no-self-use
-    async def async_set_wifi_led_off(self):
-        """Turn the wifi led on."""
-        return
-
-    # pylint: disable=no-self-use
-    async def async_set_power_price(self, price: int):
-        """Set the power price."""
         return
 
 
@@ -320,27 +327,24 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
         XiaomiPlugGenericSwitch.__init__(self, name, plug, model)
 
         if self._model == MODEL_POWER_STRIP_V2:
-            self._supported_features = SUPPORT_FLAGS_POWER_STRIP_V2
+            self._additional_supported_features = \
+                ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V2
         else:
-            self._supported_features = SUPPORT_FLAGS_POWER_STRIP_V1
+            self._additional_supported_features = \
+                ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V1
 
         self._state_attrs.update({
             ATTR_LOAD_POWER: None,
         })
 
-        if self.supported_features & SUPPORT_SET_POWER_MODE == 1:
+        if self._additional_supported_features & SUPPORT_SET_POWER_MODE == 1:
             self._state_attrs[ATTR_POWER_MODE] = None
 
-        if self.supported_features & SUPPORT_SET_WIFI_LED == 1:
+        if self._additional_supported_features & SUPPORT_SET_WIFI_LED == 1:
             self._state_attrs[ATTR_WIFI_LED] = None
 
-        if self.supported_features & SUPPORT_SET_POWER_PRICE == 1:
+        if self._additional_supported_features & SUPPORT_SET_POWER_PRICE == 1:
             self._state_attrs[ATTR_POWER_PRICE] = None
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
 
     async def async_update(self):
         """Fetch state from the device."""
@@ -361,15 +365,15 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
                 ATTR_LOAD_POWER: state.load_power,
             })
 
-            if self.supported_features & SUPPORT_SET_POWER_MODE == 1 \
+            if self._additional_supported_features & SUPPORT_SET_POWER_MODE == 1 \
                     and state.mode:
                 self._state_attrs[ATTR_POWER_MODE] = state.mode.value
 
-            if self.supported_features & SUPPORT_SET_WIFI_LED == 1 and \
+            if self._additional_supported_features & SUPPORT_SET_WIFI_LED == 1 and \
                     state.wifi_led:
                 self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
 
-            if self.supported_features & SUPPORT_SET_POWER_PRICE == 1 and \
+            if self._additional_supported_features & SUPPORT_SET_POWER_PRICE == 1 and \
                     state.power_price:
                 self._state_attrs[ATTR_POWER_PRICE] = state.power_price
 
@@ -379,7 +383,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
 
     async def async_set_power_mode(self, mode: str):
         """Set the power mode."""
-        if self.supported_features & SUPPORT_SET_POWER_MODE == 0:
+        if self._additional_supported_features & SUPPORT_SET_POWER_MODE == 0:
             return
 
         from miio.powerstrip import PowerMode
@@ -387,33 +391,6 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
         await self._try_command(
             "Setting the power mode of the power strip failed.",
             self._plug.set_power_mode, PowerMode(mode))
-
-    async def async_set_wifi_led_on(self):
-        """Turn the wifi led on."""
-        if self.supported_features & SUPPORT_SET_WIFI_LED == 0:
-            return
-
-        await self._try_command(
-            "Turning the wifi led on failed.",
-            self._plug.set_wifi_led, True)
-
-    async def async_set_wifi_led_off(self):
-        """Turn the wifi led on."""
-        if self.supported_features & SUPPORT_SET_WIFI_LED == 0:
-            return
-
-        await self._try_command(
-            "Turning the wifi led off failed.",
-            self._plug.set_wifi_led, False)
-
-    async def async_set_power_price(self, price: int):
-        """Set the power price."""
-        if self.supported_features & SUPPORT_SET_POWER_PRICE == 0:
-            return
-
-        await self._try_command(
-            "Setting the power price of the power strip failed.",
-            self._plug.set_power_price, price)
 
 
 class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
