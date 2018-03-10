@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 })
 
-REQUIREMENTS = ['python-miio==0.3.8']
+REQUIREMENTS = ['python-miio>=0.3.8']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
