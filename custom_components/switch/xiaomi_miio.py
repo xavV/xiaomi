@@ -416,6 +416,10 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
         if self._model == MODEL_PLUG_V3:
             self._additional_supported_features = \
                 ADDITIONAL_SUPPORT_FLAGS_PLUG_V3
+            self._state_attrs.update({
+                ATTR_WIFI_LED: None,
+                ATTR_LOAD_POWER: None,
+            })
 
     async def async_turn_on(self, **kwargs):
         """Turn a channel on."""
@@ -464,6 +468,12 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
             self._state_attrs.update({
                 ATTR_TEMPERATURE: state.temperature
             })
+
+            if state.wifi_led:
+                self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
+
+            if state.load_power:
+                self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
             self._state = None
