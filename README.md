@@ -21,6 +21,16 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 * Attributes
   - Temperature
 
+### Xiaomi Chuangmi Plug V3
+
+* Power (on, off)
+* USB (on, off)
+* Wifi LED (on, off)
+* Attributes
+  - Temperature
+  - Load power
+  - Wifi LED
+
 ### Xiaomi Smart Power Strip
 
 * Power (on, off)
@@ -54,11 +64,11 @@ Configuration variables:
 - **host** (*Required*): The IP of your light.
 - **token** (*Required*): The API token of your light.
 - **name** (*Optional*): The name of your light.
-- **model** (*Optional*): The model of your device. Valid values are `chuangmi.plug.v1`, `qmi.powerstrip.v1`, `zimi.powerstrip.v2`, `chuangmi.plug.m1` and `chuangmi.plug.v2`. This setting can be used to bypass the device model detection and is recommended if your device isn't always available.
+- **model** (*Optional*): The model of your device. Valid values are `chuangmi.plug.v1`, `chuangmi.plug.v3`, `qmi.powerstrip.v1`, `zimi.powerstrip.v2`, `chuangmi.plug.m1` and `chuangmi.plug.v2`. This setting can be used to bypass the device model detection and is recommended if your device isn't always available.
 
 ## Platform services
 
-#### Service `switch.xiaomi_miio_set_wifi_led_on` (Power Strip only)
+#### Service `switch.xiaomi_miio_set_wifi_led_on` (Power Strip and Chuangmi Plug V3)
 
 Turn the wifi led on.
 
@@ -66,7 +76,7 @@ Turn the wifi led on.
 |---------------------------|----------|---------------------------------------------------------|
 | `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
 
-#### Service `switch.xiaomi_miio_set_wifi_led_off` (Power Strip only)
+#### Service `switch.xiaomi_miio_set_wifi_led_off` (Power Strip and Chuangmi Plug V3)
 
 Turn the wifi led off.
 
