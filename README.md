@@ -47,6 +47,8 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 # Setup
 
 ```
+# configuration.yaml
+
 switch:
   - platform: xiaomi_miio
     name: Original Xiaomi Mi Smart WiFi Socket
