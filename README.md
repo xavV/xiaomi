@@ -66,7 +66,7 @@ Configuration variables:
 - **host** (*Required*): The IP of your light.
 - **token** (*Required*): The API token of your light.
 - **name** (*Optional*): The name of your light.
-- **model** (*Optional*): The model of your device. Valid values are `chuangmi.plug.v1`, `chuangmi.plug.v3`, `qmi.powerstrip.v1`, `zimi.powerstrip.v2`, `chuangmi.plug.m1` and `chuangmi.plug.v2`. This setting can be used to bypass the device model detection and is recommended if your device isn't always available.
+- **model** (*Optional*): The model of your device. Valid values are `chuangmi.plug.v1`, `chuangmi.plug.v3`, `qmi.powerstrip.v1`, `zimi.powerstrip.v2`, `chuangmi.plug.m1`, `chuangmi.plug.v2` and `chuangmi.plug.hmi205`. This setting can be used to bypass the device model detection and is recommended if your device isn't always available.
 
 ## Platform services
 
