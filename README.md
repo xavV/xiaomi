@@ -10,11 +10,15 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 
 ### Xiaomi Smart WiFi Socket
 
+Supported models: `chuangmi.plug.m1`, `chuangmi.plug.v2`, `chuangmi.plug.hmi205`
+
 * Power (on, off)
 * Attributes
   - Temperature
 
 ### Xiaomi Chuangmi Plug V1
+
+Supported models: `chuangmi.plug.v1`
 
 * Power (on, off)
 * USB (on, off)
@@ -22,6 +26,8 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
   - Temperature
 
 ### Xiaomi Chuangmi Plug V3
+
+Supported models: `chuangmi.plug.v3`
 
 * Power (on, off)
 * USB (on, off)
@@ -33,6 +39,8 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 
 ### Xiaomi Smart Power Strip
 
+Supported models: `qmi.powerstrip.v1`, `zimi.powerstrip.v2`
+
 * Power (on, off)
 * Wifi LED (on, off)
 * Power Price (0...999)
@@ -43,6 +51,15 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
   - Load power
   - Wifi LED
   - Mode (Power Strip V1 only)
+
+### Xiaomi Air Conditioning Companion V3
+
+Supported models: `lumi.acpartner.v3` (the socket of the acpartner.v1 and v2 isn't switchable!)
+
+* Power (on, off)
+* Attributes
+  - Load power
+
 
 # Setup
 
