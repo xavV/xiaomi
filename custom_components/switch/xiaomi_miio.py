@@ -157,7 +157,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         hass.data[DATA_KEY][host] = device
     elif model in ['lumi.acpartner.v3']:
         from miio import AirConditioningCompanionV3
-        plug = AirConditioningCompanionV3(host, token, model=model)
+        plug = AirConditioningCompanionV3(host, token)
         device = XiaomiAirConditioningCompanionSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
