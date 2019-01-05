@@ -541,7 +541,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
-            self._state = state.power_socket == 'on'
+            self._state = state.power_socket == ['on']
             self._state_attrs.update({
                 ATTR_LOAD_POWER: state.load_power,
             })
