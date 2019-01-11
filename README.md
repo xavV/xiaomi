@@ -10,7 +10,7 @@ Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all
 
 ### Xiaomi Smart WiFi Socket
 
-Supported models: `chuangmi.plug.m1`, `chuangmi.plug.m1`, `chuangmi.plug.v2`, `chuangmi.plug.hmi205`
+Supported models: `chuangmi.plug.m1`, `chuangmi.plug.m3`, `chuangmi.plug.v2`, `chuangmi.plug.hmi205`
 
 * Power (on, off)
 * Attributes
