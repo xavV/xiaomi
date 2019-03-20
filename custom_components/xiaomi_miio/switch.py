@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio>=0.4.4', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio>=0.4.5', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -542,8 +542,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
-            # FIXME: The response will change from ['on'] to 'on' with python-miio 0.4.5
-            self._state = state.power_socket == ['on']
+            self._state = state.power_socket == 'on'
             self._state_attrs.update({
                 ATTR_LOAD_POWER: state.load_power,
             })
