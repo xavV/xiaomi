@@ -1,9 +1,0 @@
-xiaomi_miio_set_power_mode:
-  description: Set the power mode.
-  fields:
-    entity_id:
-      description: Name of the xiaomi miio entity.
-      example: 'fan.xiaomi_miio_device'
-    mode:
-      description: Power mode, valid values are 'normal' and 'green'.
-      example: 'green'
