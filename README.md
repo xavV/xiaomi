@@ -67,12 +67,12 @@ Supported models: `lumi.acpartner.v3` (the socket of the acpartner.v1 and v2 isn
 # configuration.yaml
 
 switch:
-  - platform: xiaomi_miio
+  - platform: xiaomi_miio_plug
     name: Original Xiaomi Mi Smart WiFi Socket
     host: 192.168.130.59
     token: b7c4a758c251955d2c24b1d9e41ce47d
     model: chuangmi.plug.m1
-  - platform: xiaomi_miio
+  - platform: xiaomi_miio_plug
     name: Xiaomi Mi Smart Power Strip
     host: 192.168.130.60
     token: 0ed0fdccb2d0cd718108f18a447726a6
@@ -87,7 +87,7 @@ Configuration variables:
 
 ## Platform services
 
-#### Service `switch.xiaomi_miio_set_wifi_led_on` (Power Strip and Chuangmi Plug V3)
+#### Service `xiaomi_miio_plug.switch_set_wifi_led_on` (Power Strip and Chuangmi Plug V3)
 
 Turn the wifi led on.
 
@@ -95,7 +95,7 @@ Turn the wifi led on.
 |---------------------------|----------|---------------------------------------------------------|
 | `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
 
-#### Service `switch.xiaomi_miio_set_wifi_led_off` (Power Strip and Chuangmi Plug V3)
+#### Service `xiaomi_miio_plug.switch_set_wifi_led_off` (Power Strip and Chuangmi Plug V3)
 
 Turn the wifi led off.
 
@@ -103,7 +103,7 @@ Turn the wifi led off.
 |---------------------------|----------|---------------------------------------------------------|
 | `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
 
-#### Service `switch.xiaomi_miio_set_power_price` (Power Strip only)
+#### Service `xiaomi_miio_plug.switch_set_power_price` (Power Strip only)
 
 Set the power price.
 
@@ -112,7 +112,7 @@ Set the power price.
 | `entity_id`               |      yes | Only act on a specific air purifier. Else targets all.  |
 | `price`                   |       no | Power price, between 0 and 999.                         |
 
-#### Service `switch.xiaomi_miio_set_power_mode` (Power Strip V1 only)
+#### Service `xiaomi_miio_plug.switch_set_power_mode` (Power Strip V1 only)
 
 Set the power mode.
 
