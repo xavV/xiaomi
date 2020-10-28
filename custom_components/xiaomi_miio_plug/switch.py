@@ -1,18 +1,10 @@
 """Support for Xiaomi Smart WiFi Socket and Smart Power Strip."""
 import asyncio
-from functools import partial
 import logging
+from functools import partial
 
-from miio import (  # pylint: disable=import-error
-    AirConditioningCompanionV3,
-    ChuangmiPlug,
-    Device,
-    DeviceException,
-    PowerStrip,
-)
-from miio.powerstrip import PowerMode  # pylint: disable=import-error
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -22,7 +14,14 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from miio import (  # pylint: disable=import-error
+    AirConditioningCompanionV3,
+    ChuangmiPlug,
+    Device,
+    DeviceException,
+    PowerStrip,
+)
+from miio.powerstrip import PowerMode  # pylint: disable=import-error
 
 _LOGGER = logging.getLogger(__name__)
 
