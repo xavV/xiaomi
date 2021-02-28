@@ -6,11 +6,27 @@ Please follow the instructions on [Retrieving the Access Token](https://home-ass
 
 Credits: Thanks to [Rytilahti](https://github.com/rytilahti/python-miio) for all the work.
 
+## Supported devices
+
+| Name                        | Model                  | Model no. |
+| --------------------------- | ---------------------- | --------- |
+| Xiaomi Smart WiFi Socket    | chuangmi.plug.m1       | |
+| Xiaomi Smart WiFi Socket    | chuangmi.plug.m3       | |
+| Xiaomi Smart WiFi Socket    | chuangmi.plug.v2       | |
+| Xiaomi Smart WiFi Socket    | chuangmi.plug.hmi205   | |
+| Xiaomi Smart WiFi Socket    | chuangmi.plug.hmi206   | |
+| Xiaomi Chuangmi Plug V1     | chuangmi.plug.v1       | |
+| Xiaomi Chuangmi Plug V3     | chuangmi.plug.v3       | |
+| Xiaomi Chuangmi Plug HMI208 | chuangmi.plug.hmi208   | |
+| Xiaomi Smart Power Strip    | qmi.powerstrip.v1      | |
+| Xiaomi Smart Power Strip    | zimi.powerstrip.v2     | |
+| Xiaomi Air Conditioning Companion V3 | lumi.acpartner.v3  | |
+
 ## Features
 
 ### Xiaomi Smart WiFi Socket
 
-Supported models: `chuangmi.plug.m1`, `chuangmi.plug.m3`, `chuangmi.plug.v2`, `chuangmi.plug.hmi205`
+Supported models: `chuangmi.plug.m1`, `chuangmi.plug.m3`, `chuangmi.plug.v2`, `chuangmi.plug.hmi205`, `chuangmi.plug.hmi206`
 
 * Power (on, off)
 * Attributes
@@ -18,7 +34,7 @@ Supported models: `chuangmi.plug.m1`, `chuangmi.plug.m3`, `chuangmi.plug.v2`, `c
 
 ### Xiaomi Chuangmi Plug V1
 
-Supported models: `chuangmi.plug.v1`
+Supported models: `chuangmi.plug.v1`, `chuangmi.plug.hmi208`
 
 * Power (on, off)
 * USB (on, off)
