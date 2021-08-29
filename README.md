@@ -1,5 +1,11 @@
 # Xiaomi Smart WiFi Sockets and Power Strips
 
+![GitHub actions](https://github.com/syssi/xiaomiplug/actions/workflows/ci.yaml/badge.svg)
+![GitHub stars](https://img.shields.io/github/stars/syssi/xiaomiplug)
+![GitHub forks](https://img.shields.io/github/forks/syssi/xiaomiplug)
+![GitHub watchers](https://img.shields.io/github/watchers/syssi/xiaomiplug)
+[!["Buy Me A Coffee"](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg)](https://www.buymeacoffee.com/syssi)
+
 This is a custom component for Home Assistant to integrate the Xiaomi Smart WiFi Socket (called Plug), Xiaomi Smart Power Strip and Xiaomi Chuangmi Plug V1.
 
 Please follow the instructions on [Retrieving the Access Token](https://home-assistant.io/components/xiaomi/#retrieving-the-access-token) to get the API token to use in the configuration.yaml file.
