@@ -2,7 +2,7 @@
   "domain": "xiaomi_miio_plug",
   "name": "Xiaomi Mi Smart WiFi Socket",
   "config_flow": false,
-  "version": "1.4.4",
+  "version": "1.4.5",
   "iot_class": "local_polling",
   "documentation": "https://github.com/syssi/xiaomiplug",
   "issue_tracker": "https://github.com/syssi/xiaomiplug/issues",
