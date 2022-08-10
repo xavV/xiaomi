@@ -14,14 +14,14 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.exceptions import PlatformNotReady
-from miio import (  # pylint: disable=import-error
+from miio import (
     AirConditioningCompanionV3,
     ChuangmiPlug,
     Device,
     DeviceException,
     PowerStrip,
 )
-from miio.powerstrip import PowerMode  # pylint: disable=import-error
+from miio.powerstrip import PowerMode
 
 _LOGGER = logging.getLogger(__name__)
 
